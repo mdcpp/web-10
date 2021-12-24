@@ -10,6 +10,7 @@ class sprite {
         document.documentElement.append(root);
         Object.assign(this, x);
     }
+
     update() {
         let ele = document.querySelector("#" + this.id);
         ele.style = `top:${this._y}px;left:${this._x}px`;
@@ -17,10 +18,23 @@ class sprite {
         ele.children[0].height = this.height;
         ele.children[0].src = this._img;
     }
+
     move(x, y) {
         this.x = x;
         this.y = y;
     }
+
+    collision(spriteA) {
+        function inline(a, b, c, d) {
+            function mid(a, b, c) {
+                if (a > c) { let tmp = a; a = c; c = tmp; }
+                return (a <= b) && (b <= c);
+            }
+            return (mid(a, c, b) || mid(a, d, b)) && (mid(c, a, d) || mid(c, b, d))
+        }
+        return inline(this.x, this.x + this.width, spriteA.x, spriteA.x + spriteA.width) && inline(this.y, this.y + this.height, spriteA.y, spriteA.y + spriteA.height)
+    }
+
     get img() {
         return this._img;
     }
