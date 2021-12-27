@@ -35,6 +35,15 @@ class sprite {
         return inline(this.x, this.x + this.width, spriteA.x, spriteA.x + spriteA.width) && inline(this.y, this.y + this.height, spriteA.y, spriteA.y + spriteA.height)
     }
 
+    delete() {
+        let ele = document.querySelector("#" + this.id);
+        ele.remove();
+    }
+
+    static isSprite(x) {
+        return (x instanceof sprite);
+    }
+
     get img() {
         return this._img;
     }
@@ -79,12 +88,95 @@ class sprite {
     }
 }
 
-let test = new sprite({ x: 50, y: 50, width: 50, height: 50, img: "/source/dino.jpg" });
+let timer = 0;
 
-let counter = 0;
+let timerClockId = setInterval(() => timer++, 1000);
 
-setInterval(() => {
-    const step = 12;
-    if (counter % step < step / 2) test.x += 5; else test.x -= 5;
-    counter = (counter + 1) % step;
-}, 50);
+let dino = new sprite({ x: 0, y: 70, width: 30, height: 30, img: "/source/dino.png" });
+
+let isFailed = false;
+
+function activateFail() {
+    clearInterval(timerClockId)
+    isFailed = true;
+    alert("You failed! (score: " + timer + ")");
+    window.location.reload();
+}
+
+let events = [{
+    exec: function () {
+        let bird = new sprite({ x: 300, y: 10, width: 30, height: 30, img: "/source/bird.png" });
+        for (let i = 0; i < 45; i++)
+            setTimeout(() => {
+                bird.x -= 7.5;
+            }, i * 50);
+        let clockId = setInterval(() => {
+            if (isFailed) clearInterval(clockId);
+            else if (bird.collision(dino)) activateFail();
+        })
+        setTimeout(() => {
+            bird.delete();
+            clearInterval(clockId);
+        }, 46 * 50);
+    }, duration: () => (Math.random() * 1000 + 1000)
+}, {
+    exec: function () {
+        console.log("!")
+        let block = new sprite({ x: 300, y: 75, width: 25, height: 25, img: "/source/short.png" });
+        for (let i = 0; i < 45; i++)
+            setTimeout(() => {
+                block.x -= 7.5;
+            }, i * 50);
+        let clockId = setInterval(() => {
+            if (isFailed) clearInterval(clockId);
+            else if (block.collision(dino)) activateFail();
+        })
+        setTimeout(() => {
+            block.delete();
+            clearInterval(clockId);
+        }, 46 * 50);
+    }, duration: () => (Math.random() * 1000 + 1000)
+}];
+
+function eventsTrigger() {
+    let c = events[Math.floor(Math.random() * events.length)]
+    c.exec();
+    setTimeout(eventsTrigger, c.duration());
+}
+eventsTrigger();
+
+let dinoCtrlLocked = false;
+const ctrlKeycodes = ["ArrowUp"]
+function moveDino(e) {
+    if (!ctrlKeycodes.includes(e.code)) return;
+    let initinalY = dino.y;
+    if (!dinoCtrlLocked) {
+        dinoCtrlLocked = true;
+        setTimeout(() => { dinoCtrlLocked = false; }, 800)
+        switch (e.code) {
+            case "ArrowUp":
+                for (let i = 0; i < 15; i++)
+                    setTimeout(() => {
+                        dino.y -= 45 / 15;
+                    }, i * 20);
+                for (let i = 15; i < 20; i++)
+                    setTimeout(() => {
+                        dino.y -= 5 / 5;
+                    }, i * 20);
+                for (let i = 20; i < 25; i++)
+                    setTimeout(() => {
+                        dino.y -= 5 / 5;
+                    }, i * 20);
+                for (let i = 25; i < 40; i++)
+                    setTimeout(() => {
+                        dino.y += 45 / 15;
+                    }, i * 20);
+                setTimeout(() => {
+                    dino.y = initinalY;
+                }, 40 * 20);
+            // case "ArrowDown":
+        }
+    }
+}
+
+document.addEventListener('keydown', moveDino);
